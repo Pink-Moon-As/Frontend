@@ -4,7 +4,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  LayoutAnimation,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import Hamburger_Icon from '../../../assets/hamburger_icon.svg';
 import Change_Icon from '../../../assets/change_icon.svg';
@@ -15,9 +15,10 @@ import Share_Icon from '../../../assets/share_icon.svg';
 import {useState} from 'react';
 
 type propTypes = {
-  selectedSpeedCallback: (data: string) => void; // Define the data type and function signature
+  selectedSpeedCallback: (data: string) => void,
+  toggleBottomSheetCallback: () => void,
 };
-const Header = ({selectedSpeedCallback}:propTypes) => {
+const Header = ({selectedSpeedCallback,toggleBottomSheetCallback}:propTypes) => {
   const [threeDotsExpanded, setThreeDotsExpanded] = useState(false);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
 
@@ -35,6 +36,13 @@ const Header = ({selectedSpeedCallback}:propTypes) => {
     setThreeDotsExpanded(false);
   };
 
+  const handleChangeMantra = () => {
+    toggleBottomSheetCallback();
+  }
+  
+  const closeThreeDotsMenu = () => {
+    setThreeDotsExpanded(false);
+  };
 
   return (
     <>
@@ -43,7 +51,7 @@ const Header = ({selectedSpeedCallback}:propTypes) => {
           <Hamburger_Icon width={35} height={35} />
         </TouchableOpacity>
         <Text style={styles.title}>Mantra</Text>
-        <TouchableOpacity style={styles.roundedButton}>
+        <TouchableOpacity style={styles.roundedButton} onPress={handleChangeMantra}>
           <Change_Icon width={20} height={20} />
           <Text style={styles.roundedButtonText}>Change{'\n'}Mantra</Text>
         </TouchableOpacity>
@@ -189,8 +197,5 @@ const styles = StyleSheet.create({
   },
 });
 
-function GetSelectedSpeed(){
-
-}
 
 export default Header;

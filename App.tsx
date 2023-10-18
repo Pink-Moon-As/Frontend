@@ -42,7 +42,7 @@ function App(): JSX.Element {
 
   return (
 
-      <NavigationContainer>
+    <NavigationContainer>
       <StatusBar backgroundColor={'#000000'}/>
       <Stack.Navigator>
         <Stack.Screen name="Root" component={BottomNav} options={{headerShown:false}}/>

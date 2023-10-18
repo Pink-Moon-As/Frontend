@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor:'#E1E1E1',
     height:60,
     paddingBottom:5,
-    justifyContent:'space-around'
+    justifyContent:'space-around',
   },
   bottomNavbarText:{
     fontSize:12,
