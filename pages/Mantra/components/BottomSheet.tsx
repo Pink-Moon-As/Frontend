@@ -31,7 +31,7 @@ export default function BottomSheet({ openSheet, onClose }: propTypes) {
     })
   ).current;
 
-  useEffect(() => {
+  useEffect(() => {          
     if (openSheet) {
       Animated.spring(position, {
         toValue:  20,
@@ -53,7 +53,10 @@ export default function BottomSheet({ openSheet, onClose }: propTypes) {
 
     <View style={styles.container}>
       <Animated.View style={[styles.contentContainer, animatedStyle]} >
-        <View style={[styles.sheetHandleView]} {...panResponder.panHandlers} />
+        <View style={styles.sheetHandleViewContainer} {...panResponder.panHandlers}>
+          <View style={[styles.sheetHandleView]}  />
+        </View>
+        
         <View style={styles.sheetContentContainer}>
           <Text>Your Bottom Sheet Content</Text>
         </View>
@@ -78,7 +81,6 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'rgba(44, 44, 44, 0.8)',
     paddingHorizontal: 12,
-    paddingVertical: 10,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     height: sheetHeight,
@@ -94,6 +96,10 @@ const styles = StyleSheet.create({
   sheetContentContainer: {
     marginTop: 8,
   },
+  sheetHandleViewContainer:{
+    width:'auto',
+    paddingTop:10
+  }
 });
 
 

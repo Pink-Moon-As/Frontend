@@ -70,7 +70,7 @@ const Header = ({selectedSpeedCallback,toggleBottomSheetCallback}:propTypes) => 
         <View style={styles.threeDotsDropdown}>
           <View style={styles.dropdownRow}>
             <Speed_Icon />
-            <Text style={styles.threeDotsDropdownText}>Change Speed</Text>
+            <Text style={[styles.threeDotsDropdownText,{marginLeft:8}]}>Change Speed</Text>
           </View>
           {['0.5x', '1x', '1.25x', '1.5x', '2x'].map(speed => (
             <TouchableOpacity
@@ -177,12 +177,11 @@ const styles = StyleSheet.create({
     right: 5,
     backgroundColor: 'rgba(44,44,44,0.8)',
     width: 200,
-    height: 'auto',
     borderRadius: 4,
     paddingTop: 8,
   },
   threeDotsDropdownText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: '#FBFBFB',
   },
@@ -191,9 +190,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: 120,
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingLeft: 16,
-    height: 24,
+    height: 26,
   },
 });
 
