@@ -12,13 +12,14 @@ import Three_Dots_Icon from '../../../assets/dotted_icon.svg';
 import Coins_Icon from '../../../assets/coins_icon.svg';
 import Speed_Icon from '../../../assets/speed_icon.svg';
 import Share_Icon from '../../../assets/share_icon.svg';
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
 
 type propTypes = {
   selectedSpeedCallback: (data: string) => void,
   toggleBottomSheetCallback: () => void,
+  isSheetOpen:boolean
 };
-const Header = ({selectedSpeedCallback,toggleBottomSheetCallback}:propTypes) => {
+const Header = ({selectedSpeedCallback,toggleBottomSheetCallback,isSheetOpen}:propTypes) => {
   const [threeDotsExpanded, setThreeDotsExpanded] = useState(false);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
 
@@ -43,6 +44,13 @@ const Header = ({selectedSpeedCallback,toggleBottomSheetCallback}:propTypes) => 
   const closeThreeDotsMenu = () => {
     setThreeDotsExpanded(false);
   };
+
+  useEffect(() => {
+    if(threeDotsExpanded && isSheetOpen){
+      setThreeDotsExpanded(false);
+    }
+  }, [isSheetOpen])
+  
 
   return (
     <>
@@ -175,10 +183,11 @@ const styles = StyleSheet.create({
     display: 'flex',
     top: 55,
     right: 5,
-    backgroundColor: 'rgba(44,44,44,0.8)',
+    backgroundColor: 'rgba(44,44,44,0.9)',
     width: 200,
     borderRadius: 4,
     paddingTop: 8,
+    zIndex:100
   },
   threeDotsDropdownText: {
     fontSize: 13,
@@ -190,6 +199,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: 120,
     justifyContent: 'space-between',
+    alignItems:'center',
     paddingVertical: 5,
     paddingLeft: 16,
     height: 26,

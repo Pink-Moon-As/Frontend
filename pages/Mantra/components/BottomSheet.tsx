@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     margin: 0,
-    backgroundColor:'rbga(255,0,0,0.5)',
     zIndex:100
   },
   contentContainer: {
@@ -79,7 +78,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(44, 44, 44, 0.8)',
+    backgroundColor: 'rgba(44, 44, 44, 0.85)',
     paddingHorizontal: 12,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
