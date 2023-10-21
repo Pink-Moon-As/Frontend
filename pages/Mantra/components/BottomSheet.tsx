@@ -15,12 +15,14 @@ import { BlurView } from "@react-native-community/blur";
 import {SvgUri} from 'react-native-svg';
 import Music_Icon from '../../../assets/music_icon.svg';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-
+import Small_Play_Icon from '../../../assets/small_play_icon.svg'
 type propTypes = {
   openSheet: boolean;
+  toggleBottomSheetCallback: () => void;
   onClose: () => void;
-  mantraList: MantraModel[]
+  mantraList: {[key: string]: MantraModel}
   thumbnailUrls:{ [key: string]: string }
+  updateSelectedMatraCallback: (data: string) => void;
 };
 
 const screenHeight = sizes.height;
@@ -30,7 +32,9 @@ export default function BottomSheet({
   openSheet,
   onClose,
   mantraList,
-  thumbnailUrls
+  thumbnailUrls,
+  updateSelectedMatraCallback,
+  toggleBottomSheetCallback
 }: propTypes) {
   const position = useRef(new Animated.Value(screenHeight)).current;
   
@@ -71,14 +75,17 @@ export default function BottomSheet({
     transform: [{translateY: position}],
   };
 
- 
+  const handleMantraRowClick = (id:string) => {
+    toggleBottomSheetCallback();
+    updateSelectedMatraCallback(id)
+  }
 
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.contentContainer, animatedStyle]}>
         <BlurView
         blurType="dark"
-        blurAmount={5}
+        blurAmount={6}
         style={styles.blurView}
         reducedTransparencyFallbackColor="rgb(0,0,0)"
         >
@@ -100,17 +107,18 @@ export default function BottomSheet({
             </View>
             <View style={styles.listContainer}>
               <FlatList
-                data={mantraList}
+                data={Object.values(mantraList)}
                 renderItem={({item}) => (
-                  <TouchableOpacity style={styles.mantraRow}>
+                  <TouchableOpacity style={styles.mantraRow} onPress={()=>handleMantraRowClick(item.id)}>
                     <View style={styles.mantraThumbnail}>
                       <Music_Icon width={42} height={42} stroke={'rgb(255,255,255)'} style={{position:'absolute'}}/>
-                      <SvgUri width={42} height={42} uri={thumbnailUrls[item.thumbnail_ref]} fallback={<Music_Icon/>} />
+                      <SvgUri width={42} height={42} uri={thumbnailUrls[item.id]} fallback={<Music_Icon/>} />
                     </View>
                     <View style={styles.matraRowVertical}>
                       <Text style={[styles.mantraText,{fontWeight:'600',fontSize:16}]}>{item.mantra_name}</Text>
                       <Text style={[styles.mantraText,{fontWeight:'400',fontSize:14}]}>{item.mantra_owner}</Text>
                     </View>
+                    <Small_Play_Icon/>
                   </TouchableOpacity>
                 )}
               />

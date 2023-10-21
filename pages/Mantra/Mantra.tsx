@@ -1,4 +1,10 @@
-import {Text, StyleSheet, View, SafeAreaView, ActivityIndicator} from 'react-native';
+import {
+  Text,
+  StyleSheet,
+  View,
+  SafeAreaView,
+  ActivityIndicator,
+} from 'react-native';
 import React, {Component, useState, useEffect} from 'react';
 import Header from './components/Header';
 import BottomSheet from './components/BottomSheet';
@@ -6,15 +12,17 @@ import app from '@react-native-firebase/app';
 import storage from '@react-native-firebase/storage';
 import firestore from '@react-native-firebase/firestore';
 import {SvgUri} from 'react-native-svg';
-import {MantraModel} from '../../models/Mantra'
+import {MantraModel} from '../../models/Mantra';
 
 export default function Mantra() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
+  const [backdropRef, setBackdropRef] = useState('/Backdrop/default_bd.svg')
   const [svgURL, setSvgURL] = useState<string | null>(null);
   const [openSheet, setOpenSheet] = useState(false);
-  const [thumbnailUrls, setThumbnailUrls] = useState<{ [key: string]: string }>({});
-  const [mantraList, setMantraList] = useState<MantraModel[]>([])
+  const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null)
+  const [thumbnailUrls, setThumbnailUrls] = useState<{[key: string]: string}>({});
+  const [mantraList, setMantraList] = useState<{[key: string]: MantraModel}>({});
   const updateSelectedSpeed = (speed: string) => {
     setSelectedSpeed(speed);
   };
@@ -29,77 +37,89 @@ export default function Mantra() {
     }, 500);
   };
 
+  const updateSelectedMatra = (id:string) => {
+    setSelectedMantraId(id)
+    setBackdropRef(mantraList[id].backdrop_ref)
+  }
   useEffect(() => {
-    const storageRef = storage().ref('/Backdrop/default_bd.svg');
+    const storageRef = storage().ref(backdropRef);
     storageRef
       .getDownloadURL()
       .then(url => {
         setSvgURL(url);
-        setIsLoading(false)
+        setIsLoading(false);
       })
       .catch(error => {
         console.error('Error getting SVG URL: ', error);
-        setIsLoading(false)
+        setIsLoading(false);
       });
-  }, []);
-
+  }, [backdropRef]);
 
   useEffect(() => {
-    const mantraCollection =  firestore().collection('TblMantra');
-    const subscriber = mantraCollection
-      .onSnapshot((docs) => {
-        const tempMantraList:MantraModel[] = [];
-        docs.forEach((doc)=>{
-          const docData = doc.data();
-          const mantraObject = new MantraModel(docData.id,docData.mantra_name,docData.mantra_owner,docData.audio_ref,docData.backdrop_ref,docData.thumbnail_ref,docData.lyrics);
-          tempMantraList.push(mantraObject)
-        })
-        setMantraList(tempMantraList)
-        setIsLoading(isLoading && false)
+    const mantraCollection = firestore().collection('TblMantra');
+    const subscriber = mantraCollection.onSnapshot(docs => {
+      const tempMantraList: {[key: string]: MantraModel} = {};
+      docs.forEach(doc => {
+        const docData = doc.data();
+        const mantraObject = new MantraModel(
+          docData.id,
+          docData.mantra_name,
+          docData.mantra_owner,
+          docData.audio_ref,
+          docData.backdrop_ref,
+          docData.thumbnail_ref,
+          docData.lyrics,
+        );
+        // Use the id as the key
+        tempMantraList[docData.id] = mantraObject;
       });
+      setMantraList(tempMantraList);
+      setIsLoading(isLoading && false);
+    });
     return () => subscriber();
   }, []);
 
   useEffect(() => {
     const fetchUrls = async () => {
-      const urls: { [key: string]: string } = {};
-      for (const item of mantraList) {
-        try {
-          const url = await getUrl(item.thumbnail_ref);
-          urls[item.thumbnail_ref] = url;
-        } catch (error) {
-          console.error('Error getting SVG URL: ', error);
+      const urls: {[key: string]: string} = {};
+      for (const id in mantraList) {
+        if (mantraList.hasOwnProperty(id)) {
+          try {
+            const url = await getUrl(mantraList[id].thumbnail_ref);
+            urls[id] = url;
+          } catch (error) {
+            console.error('Error getting SVG URL: ', error);
+          }
         }
       }
       setThumbnailUrls(urls);
-      setIsLoading(isLoading && false)
+      setIsLoading(isLoading && false);
     };
     fetchUrls();
-
   }, [mantraList]);
-  async function getUrl(ref:string): Promise<string>{
+
+  async function getUrl(ref: string): Promise<string> {
     const storageRef = storage().ref(ref);
     return storageRef
       .getDownloadURL()
       .then(url => {
-        return url
+        return url;
       })
       .catch(error => {
         console.error('Error getting SVG URL: ', error);
-        return "";
+        return '';
       });
   }
-  
 
-  if(isLoading){
+  if (isLoading) {
     return (
       <SafeAreaView>
-        <View style={[styles.parent,styles.parentLoading]}>
-          <ActivityIndicator size='large' color='#E25E3E'/>
+        <View style={[styles.parent, styles.parentLoading]}>
+          <ActivityIndicator size="large" color="#E25E3E" />
         </View>
       </SafeAreaView>
-    )
-  }  
+    );
+  }
   return (
     <SafeAreaView>
       <View style={styles.parent}>
@@ -110,7 +130,14 @@ export default function Mantra() {
         />
         {openSheet && <View style={styles.modal}></View>}
         {openSheet && (
-          <BottomSheet openSheet={openSheet} onClose={closeBottomSheet} mantraList={mantraList} thumbnailUrls={thumbnailUrls}/>
+          <BottomSheet
+            openSheet={openSheet}
+            toggleBottomSheetCallback={toggleBottomSheet}
+            onClose={closeBottomSheet}
+            mantraList={mantraList}
+            thumbnailUrls={thumbnailUrls}
+            updateSelectedMatraCallback={updateSelectedMatra}
+          />
         )}
         <View style={styles.backdrop}>
           {svgURL ? (
@@ -140,17 +167,16 @@ const styles = StyleSheet.create({
     zIndex: 0,
     // backgroundColor:'rgba(0,0,0,0.5)'
   },
-  backdrop:{
-    top:100,
-    display:'flex',
-    justifyContent:'center',
-    alignItems:'center',
-    position:'absolute',
-    width:'100 %'
+  backdrop: {
+    top: 100,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    width: '100 %',
   },
   parentLoading: {
     justifyContent: 'center',
-    alignItems:'center'
+    alignItems: 'center',
   },
- 
 });

@@ -84,7 +84,7 @@ const Header = ({
         <View style={styles.threeDotsDropdown}>
           <BlurView
             blurType="dark"
-            blurAmount={5}
+            blurAmount={6}
             style={styles.blurView}
             reducedTransparencyFallbackColor="rgb(0,0,0)">
             <View style={styles.dropdownRow}>
