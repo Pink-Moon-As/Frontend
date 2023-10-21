@@ -4,6 +4,7 @@ import {
   View,
   SafeAreaView,
   ActivityIndicator,
+  Platform
 } from 'react-native';
 import React, {Component, useState, useEffect} from 'react';
 import Header from './components/Header';
@@ -13,16 +14,33 @@ import storage from '@react-native-firebase/storage';
 import firestore from '@react-native-firebase/firestore';
 import {SvgUri} from 'react-native-svg';
 import {MantraModel} from '../../models/Mantra';
+import AnimatedProgressWheel from 'react-native-progress-wheel';
+import * as Progress from 'react-native-progress';
+import Play_Icon from '../../assets/play_icon.svg'
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import Sound from 'react-native-sound';
+import CircularProgress from '../../components/CircularProgress';
+
 
 export default function Mantra() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
-  const [backdropRef, setBackdropRef] = useState('/Backdrop/default_bd.svg')
+  const [backdropSize, setBackdropSize] = useState(220);
+  const [backdropRef, setBackdropRef] = useState('/Backdrop/default_bd.svg');
+  const [audioRef, setAudioRef] = useState<string>("")
   const [svgURL, setSvgURL] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState("");
   const [openSheet, setOpenSheet] = useState(false);
-  const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null)
-  const [thumbnailUrls, setThumbnailUrls] = useState<{[key: string]: string}>({});
-  const [mantraList, setMantraList] = useState<{[key: string]: MantraModel}>({});
+  const [progress, setProgress] = useState(0)
+  const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null);
+  let soundObject:Sound;
+  const [thumbnailUrls, setThumbnailUrls] = useState<{[key: string]: string}>(
+    {},
+  );
+  const [mantraList, setMantraList] = useState<{[key: string]: MantraModel}>(
+    {},
+  );
+  // const [progressIndicatorValue, setProgressIndicatorValue] = useState(0)
   const updateSelectedSpeed = (speed: string) => {
     setSelectedSpeed(speed);
   };
@@ -37,10 +55,14 @@ export default function Mantra() {
     }, 500);
   };
 
-  const updateSelectedMatra = (id:string) => {
-    setSelectedMantraId(id)
-    setBackdropRef(mantraList[id].backdrop_ref)
-  }
+  const updateSelectedMatra = (id: string) => {
+    setSelectedMantraId(id);
+    setBackdropRef(mantraList[id].backdrop_ref);
+    setBackdropSize(150);
+    setAudioRef(mantraList[id].audio_ref)
+  };
+ 
+
   useEffect(() => {
     const storageRef = storage().ref(backdropRef);
     storageRef
@@ -54,6 +76,48 @@ export default function Mantra() {
         setIsLoading(false);
       });
   }, [backdropRef]);
+
+  useEffect(() => {
+    if(audioRef=="") return;
+    const storageRef = storage().ref(audioRef)
+    storageRef
+      .getDownloadURL()
+      .then(url =>{
+        setAudioUrl(url);
+      })
+      .catch(error => {
+        console.error('Error getting Audio URL: ', error);
+      });
+
+  }, [audioRef])
+  
+  useEffect(() => {
+    if(soundObject) soundObject.release();
+    if(audioUrl=="") return;
+    soundObject = new Sound(audioUrl, Platform.OS === 'ios' ? '' : encodeURIComponent(Sound.DOCUMENT), (error) => {
+      if (error) {
+        console.error('Error loading sound: ', error);
+        return;
+      }
+      else{
+        playAudio();
+      }
+    });
+   
+  }, [audioUrl])
+
+  const playAudio = () => {
+    if (soundObject) {
+      soundObject.play((success) => {
+        if (success) {
+          console.log('Audio played successfully');
+        } else {
+          console.log('Playback failed due to audio decoding errors');
+        }
+      });
+    }
+  };
+  
 
   useEffect(() => {
     const mantraCollection = firestore().collection('TblMantra');
@@ -137,14 +201,48 @@ export default function Mantra() {
             mantraList={mantraList}
             thumbnailUrls={thumbnailUrls}
             updateSelectedMatraCallback={updateSelectedMatra}
+            selectedMantraId={selectedMantraId}
           />
         )}
-        <View style={styles.backdrop}>
-          {svgURL ? (
-            // Render the SVG using the SvgUri component from react-native-svg
-            <SvgUri width="220" height="220" uri={svgURL} />
-          ) : (
-            <Text>Loading SVG...</Text>
+        <View style={styles.contentContainer}>
+          <View style={styles.backdrop}>
+            {svgURL ? (
+              // Render the SVG using the SvgUri component from react-native-svg
+              <SvgUri width={backdropSize} height={backdropSize} uri={svgURL} />
+            ) : (
+              <Text>Loading SVG...</Text>
+            )}
+          </View>
+
+          {selectedMantraId != null && (
+            <View style={styles.mantraSelectedContainer}>
+              <View style={styles.lyricsContainer}>
+                <Text style={styles.lyricsText}>
+                  {selectedMantraId != null &&
+                    mantraList[selectedMantraId].lyrics}
+                </Text>
+              </View>
+
+              {/* <Progress.Circle
+                size={230}
+                progress={0.8}
+                borderWidth={14}
+                // thickness={2}
+                // fill={'rgba(255,0,0,0)'}
+                color={'rgba(240, 79, 44, 1)'}
+                unfilledColor={'rgba(221, 221, 221, 1)'}
+               /> */}
+               <CircularProgress
+                radius={120}
+                progress={0.2}
+               />
+              {/* <View style={styles.progressContainer}>
+               
+                
+                
+                
+              </View> */}
+            </View>
           )}
         </View>
       </View>
@@ -168,15 +266,49 @@ const styles = StyleSheet.create({
     // backgroundColor:'rgba(0,0,0,0.5)'
   },
   backdrop: {
-    top: 100,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
     width: '100 %',
+    marginTop: 40,
   },
   parentLoading: {
     justifyContent: 'center',
     alignItems: 'center',
   },
+  contentContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    position: 'absolute',
+    width: '100 %',
+    height: '100 %',
+    top: 51,
+    alignItems: 'center',
+  },
+  lyricsContainer: {
+    marginTop: 10,
+    height: 120,
+    overflow: 'scroll',
+  },
+  lyricsText: {
+    color: 'rgba(51, 51, 51, 1)',
+    fontWeight: '600',
+    fontSize: 24,
+    overflow: 'scroll',
+  },
+  mantraSelectedContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    width: '100 %',
+    height: '100 %',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  progressContainer:{
+    // backgroundColor:'black',
+    width:'100 %',
+    flex:1
+  }
 });

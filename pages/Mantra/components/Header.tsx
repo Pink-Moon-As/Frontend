@@ -13,6 +13,7 @@ import Coins_Icon from '../../../assets/coins_icon.svg';
 import Speed_Icon from '../../../assets/speed_icon.svg';
 import Share_Icon from '../../../assets/share_icon.svg';
 import {useState, useEffect} from 'react';
+import Blurred_BG_Dropdown from '../../../assets/blurred_bg_dropdown.svg'
 import {BlurView} from '@react-native-community/blur';
 
 type propTypes = {
@@ -46,9 +47,6 @@ const Header = ({
     toggleBottomSheetCallback();
   };
 
-  const closeThreeDotsMenu = () => {
-    setThreeDotsExpanded(false);
-  };
 
   useEffect(() => {
     if (threeDotsExpanded && isSheetOpen) {

@@ -23,6 +23,7 @@ type propTypes = {
   mantraList: {[key: string]: MantraModel}
   thumbnailUrls:{ [key: string]: string }
   updateSelectedMatraCallback: (data: string) => void;
+  selectedMantraId:string|null
 };
 
 const screenHeight = sizes.height;
@@ -34,7 +35,8 @@ export default function BottomSheet({
   mantraList,
   thumbnailUrls,
   updateSelectedMatraCallback,
-  toggleBottomSheetCallback
+  toggleBottomSheetCallback,
+  selectedMantraId
 }: propTypes) {
   const position = useRef(new Animated.Value(screenHeight)).current;
   
@@ -89,7 +91,7 @@ export default function BottomSheet({
         style={styles.blurView}
         reducedTransparencyFallbackColor="rgb(0,0,0)"
         >
-         
+          
           <View
             style={styles.sheetHandleViewContainer}
             {...panResponder.panHandlers}>
@@ -124,8 +126,8 @@ export default function BottomSheet({
               />
             </View>
           </View>
+       
         </BlurView>
-        
       </Animated.View>
     </View>
   );
