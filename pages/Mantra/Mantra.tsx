@@ -4,7 +4,8 @@ import {
   View,
   SafeAreaView,
   ActivityIndicator,
-  Platform
+  Platform,
+  TouchableOpacity,
 } from 'react-native';
 import React, {Component, useState, useEffect} from 'react';
 import Header from './components/Header';
@@ -16,31 +17,33 @@ import {SvgUri} from 'react-native-svg';
 import {MantraModel} from '../../models/Mantra';
 import AnimatedProgressWheel from 'react-native-progress-wheel';
 import * as Progress from 'react-native-progress';
-import Play_Icon from '../../assets/play_icon.svg'
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import Play_Icon from '../../assets/play_icon.svg';
+import Pause_Icon from '../../assets/pause_icon.svg'
 import Sound from 'react-native-sound';
 import CircularProgress from '../../components/CircularProgress';
-
 
 export default function Mantra() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
   const [backdropSize, setBackdropSize] = useState(220);
   const [backdropRef, setBackdropRef] = useState('/Backdrop/default_bd.svg');
-  const [audioRef, setAudioRef] = useState<string>("")
+  const [audioRef, setAudioRef] = useState<string>('');
   const [svgURL, setSvgURL] = useState<string | null>(null);
-  const [audioUrl, setAudioUrl] = useState("");
+  const [audioUrl, setAudioUrl] = useState('');
   const [openSheet, setOpenSheet] = useState(false);
-  const [progress, setProgress] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false);
   const [selectedMantraId, setSelectedMantraId] = useState<string | null>(null);
-  let soundObject:Sound;
+  const [soundObject, setSoundObject] = useState<Sound | null>(null);
+  const [currentLoopCount, setcurrentLoopCount] = useState(0);
+  const [totalLoopCount, setTotalLoopCount]=useState(108);
   const [thumbnailUrls, setThumbnailUrls] = useState<{[key: string]: string}>(
     {},
   );
   const [mantraList, setMantraList] = useState<{[key: string]: MantraModel}>(
     {},
   );
-  // const [progressIndicatorValue, setProgressIndicatorValue] = useState(0)
+  const [progressIndicatorValue, setProgressIndicatorValue] = useState(0);
+
   const updateSelectedSpeed = (speed: string) => {
     setSelectedSpeed(speed);
   };
@@ -59,9 +62,8 @@ export default function Mantra() {
     setSelectedMantraId(id);
     setBackdropRef(mantraList[id].backdrop_ref);
     setBackdropSize(150);
-    setAudioRef(mantraList[id].audio_ref)
+    setAudioRef(mantraList[id].audio_ref);
   };
- 
 
   useEffect(() => {
     const storageRef = storage().ref(backdropRef);
@@ -78,45 +80,75 @@ export default function Mantra() {
   }, [backdropRef]);
 
   useEffect(() => {
-    if(audioRef=="") return;
-    const storageRef = storage().ref(audioRef)
+    if (audioRef == '') return;
+    const storageRef = storage().ref(audioRef);
     storageRef
       .getDownloadURL()
-      .then(url =>{
+      .then(url => {
         setAudioUrl(url);
       })
       .catch(error => {
         console.error('Error getting Audio URL: ', error);
       });
+  }, [audioRef]);
 
-  }, [audioRef])
-  
   useEffect(() => {
-    if(soundObject) soundObject.release();
-    if(audioUrl=="") return;
-    soundObject = new Sound(audioUrl, Platform.OS === 'ios' ? '' : encodeURIComponent(Sound.DOCUMENT), (error) => {
-      if (error) {
-        console.error('Error loading sound: ', error);
-        return;
-      }
-      else{
-        playAudio();
-      }
-    });
-   
-  }, [audioUrl])
+    if (audioUrl == '') return;
+    const so = new Sound(
+      audioUrl,
+      Platform.OS === 'ios' ? '' : encodeURIComponent(Sound.DOCUMENT),
+      error => {
+        if (error) {
+          console.error('Error loading sound: ', error);
+          return;
+        } else {
+          // playAudio();
+          setSoundObject(so);
+        }
+      },
+    );
+  }, [audioUrl]);
 
+  useEffect(() => {
+    const numericSpeed = parseFloat(selectedSpeed.split('x')[0]);
+    soundObject?.setSpeed(numericSpeed);
+  }, [selectedSpeed]);
+  
   const playAudio = () => {
     if (soundObject) {
-      soundObject.play((success) => {
+      soundObject.play(success => {
         if (success) {
+          setcurrentLoopCount(currentLoopCount+1);
           console.log('Audio played successfully');
         } else {
           console.log('Playback failed due to audio decoding errors');
         }
+        setIsPlaying(false);
       });
     }
   };
+
+  
+  const togglePlayback = () => {
+    if (!soundObject) {
+      return;
+    }
+    if (isPlaying) {
+      soundObject.pause();
+      setIsPlaying(false);
+    } else if(currentLoopCount<totalLoopCount) {
+      setIsPlaying(true);
+      playAudio();
+    }
+    else if(currentLoopCount>=totalLoopCount){
+      setcurrentLoopCount(0);
+      setIsPlaying(true);
+      playAudio();
+    }
+  };
+  useEffect(() => {
+   setProgressIndicatorValue(currentLoopCount/totalLoopCount)
+  }, [currentLoopCount,totalLoopCount])
   
 
   useEffect(() => {
@@ -223,25 +255,23 @@ export default function Mantra() {
                 </Text>
               </View>
 
-              {/* <Progress.Circle
-                size={230}
-                progress={0.8}
-                borderWidth={14}
-                // thickness={2}
-                // fill={'rgba(255,0,0,0)'}
-                color={'rgba(240, 79, 44, 1)'}
-                unfilledColor={'rgba(221, 221, 221, 1)'}
-               /> */}
-               <CircularProgress
-                radius={120}
-                progress={0.2}
-               />
-              {/* <View style={styles.progressContainer}>
-               
-                
-                
-                
-              </View> */}
+              <View style={styles.progressContainer}>
+                <CircularProgress radius={120} progress={progressIndicatorValue} />
+                <View style={styles.playIconContainer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      togglePlayback();
+                    }}>
+                    {  !isPlaying ?
+                    <Play_Icon style={{zIndex: 1}} /> :
+                    <Pause_Icon style={{zIndex: 1}}/>
+                    }
+                  </TouchableOpacity>
+                  {currentLoopCount!=0 &&
+                    <Text style={styles.loopCountText}>{currentLoopCount}/{totalLoopCount}</Text>}
+
+                </View>
+              </View>
             </View>
           )}
         </View>
@@ -306,9 +336,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
     alignItems: 'center',
   },
-  progressContainer:{
-    // backgroundColor:'black',
-    width:'100 %',
-    flex:1
+  progressContainer: {
+    width: '100 %',
+    flex: 1,
+    alignItems: 'center',
+  },
+  playIconContainer: {
+    position: 'absolute',
+    top: 91,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loopCountText:{
+    color:'rgba(228, 104, 74, 1)',
+    fontWeight:'600',
+    fontSize:19,
+    marginTop:10
   }
 });
