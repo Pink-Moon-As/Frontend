@@ -43,7 +43,7 @@ export default function Mantra() {
     {},
   );
   const [progressIndicatorValue, setProgressIndicatorValue] = useState(0);
-
+  
   const updateSelectedSpeed = (speed: string) => {
     setSelectedSpeed(speed);
   };
@@ -64,6 +64,16 @@ export default function Mantra() {
     setBackdropSize(150);
     setAudioRef(mantraList[id].audio_ref);
   };
+  
+  useEffect(() => {
+   if(selectedMantraId==null){
+    setTimeout(()=>{
+      setOpenSheet(true);
+    },1500)
+    
+   }
+  }, [selectedMantraId])
+  
 
   useEffect(() => {
     const storageRef = storage().ref(backdropRef);
