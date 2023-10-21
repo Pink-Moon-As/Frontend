@@ -4,13 +4,17 @@ import Header from './components/Header';
 import BottomSheet from './components/BottomSheet';
 import app from '@react-native-firebase/app';
 import storage from '@react-native-firebase/storage';
+import firestore from '@react-native-firebase/firestore';
 import {SvgUri} from 'react-native-svg';
+import {MantraModel} from '../../models/Mantra'
 
 export default function Mantra() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
   const [svgURL, setSvgURL] = useState<string | null>(null);
   const [openSheet, setOpenSheet] = useState(false);
+  const [thumbnailUrls, setThumbnailUrls] = useState<{ [key: string]: string }>({});
+  const [mantraList, setMantraList] = useState<MantraModel[]>([])
   const updateSelectedSpeed = (speed: string) => {
     setSelectedSpeed(speed);
   };
@@ -24,6 +28,7 @@ export default function Mantra() {
       setOpenSheet(false);
     }, 500);
   };
+
   useEffect(() => {
     const storageRef = storage().ref('/Backdrop/default_bd.svg');
     storageRef
@@ -37,6 +42,54 @@ export default function Mantra() {
         setIsLoading(false)
       });
   }, []);
+
+
+  useEffect(() => {
+    const mantraCollection =  firestore().collection('TblMantra');
+    const subscriber = mantraCollection
+      .onSnapshot((docs) => {
+        const tempMantraList:MantraModel[] = [];
+        docs.forEach((doc)=>{
+          const docData = doc.data();
+          const mantraObject = new MantraModel(docData.id,docData.mantra_name,docData.mantra_owner,docData.audio_ref,docData.backdrop_ref,docData.thumbnail_ref,docData.lyrics);
+          tempMantraList.push(mantraObject)
+        })
+        setMantraList(tempMantraList)
+        setIsLoading(isLoading && false)
+      });
+    return () => subscriber();
+  }, []);
+
+  useEffect(() => {
+    const fetchUrls = async () => {
+      const urls: { [key: string]: string } = {};
+      for (const item of mantraList) {
+        try {
+          const url = await getUrl(item.thumbnail_ref);
+          urls[item.thumbnail_ref] = url;
+        } catch (error) {
+          console.error('Error getting SVG URL: ', error);
+        }
+      }
+      setThumbnailUrls(urls);
+      setIsLoading(isLoading && false)
+    };
+    fetchUrls();
+
+  }, [mantraList]);
+  async function getUrl(ref:string): Promise<string>{
+    const storageRef = storage().ref(ref);
+    return storageRef
+      .getDownloadURL()
+      .then(url => {
+        return url
+      })
+      .catch(error => {
+        console.error('Error getting SVG URL: ', error);
+        return "";
+      });
+  }
+  
 
   if(isLoading){
     return (
@@ -57,7 +110,7 @@ export default function Mantra() {
         />
         {openSheet && <View style={styles.modal}></View>}
         {openSheet && (
-          <BottomSheet openSheet={openSheet} onClose={closeBottomSheet} />
+          <BottomSheet openSheet={openSheet} onClose={closeBottomSheet} mantraList={mantraList} thumbnailUrls={thumbnailUrls}/>
         )}
         <View style={styles.backdrop}>
           {svgURL ? (

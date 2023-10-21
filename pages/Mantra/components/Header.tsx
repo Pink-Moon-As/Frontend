@@ -12,14 +12,19 @@ import Three_Dots_Icon from '../../../assets/dotted_icon.svg';
 import Coins_Icon from '../../../assets/coins_icon.svg';
 import Speed_Icon from '../../../assets/speed_icon.svg';
 import Share_Icon from '../../../assets/share_icon.svg';
-import {useState,useEffect} from 'react';
+import {useState, useEffect} from 'react';
+import {BlurView} from '@react-native-community/blur';
 
 type propTypes = {
-  selectedSpeedCallback: (data: string) => void,
-  toggleBottomSheetCallback: () => void,
-  isSheetOpen:boolean
+  selectedSpeedCallback: (data: string) => void;
+  toggleBottomSheetCallback: () => void;
+  isSheetOpen: boolean;
 };
-const Header = ({selectedSpeedCallback,toggleBottomSheetCallback,isSheetOpen}:propTypes) => {
+const Header = ({
+  selectedSpeedCallback,
+  toggleBottomSheetCallback,
+  isSheetOpen,
+}: propTypes) => {
   const [threeDotsExpanded, setThreeDotsExpanded] = useState(false);
   const [selectedSpeed, setSelectedSpeed] = useState('1x');
 
@@ -39,18 +44,17 @@ const Header = ({selectedSpeedCallback,toggleBottomSheetCallback,isSheetOpen}:pr
 
   const handleChangeMantra = () => {
     toggleBottomSheetCallback();
-  }
-  
+  };
+
   const closeThreeDotsMenu = () => {
     setThreeDotsExpanded(false);
   };
 
   useEffect(() => {
-    if(threeDotsExpanded && isSheetOpen){
+    if (threeDotsExpanded && isSheetOpen) {
       setThreeDotsExpanded(false);
     }
-  }, [isSheetOpen])
-  
+  }, [isSheetOpen]);
 
   return (
     <>
@@ -59,7 +63,9 @@ const Header = ({selectedSpeedCallback,toggleBottomSheetCallback,isSheetOpen}:pr
           <Hamburger_Icon width={35} height={35} />
         </TouchableOpacity>
         <Text style={styles.title}>Mantra</Text>
-        <TouchableOpacity style={styles.roundedButton} onPress={handleChangeMantra}>
+        <TouchableOpacity
+          style={styles.roundedButton}
+          onPress={handleChangeMantra}>
           <Change_Icon width={20} height={20} />
           <Text style={styles.roundedButtonText}>Change{'\n'}Mantra</Text>
         </TouchableOpacity>
@@ -76,45 +82,52 @@ const Header = ({selectedSpeedCallback,toggleBottomSheetCallback,isSheetOpen}:pr
 
       {threeDotsExpanded && (
         <View style={styles.threeDotsDropdown}>
-          <View style={styles.dropdownRow}>
-            <Speed_Icon />
-            <Text style={[styles.threeDotsDropdownText,{marginLeft:8}]}>Change Speed</Text>
-          </View>
-          {['0.5x', '1x', '1.25x', '1.5x', '2x'].map(speed => (
+          <BlurView
+            blurType="dark"
+            blurAmount={5}
+            style={styles.blurView}
+            reducedTransparencyFallbackColor="rgb(0,0,0)">
+            <View style={styles.dropdownRow}>
+              <Speed_Icon />
+              <Text style={[styles.threeDotsDropdownText, {marginLeft: 8}]}>
+                Change Speed
+              </Text>
+            </View>
+            {['0.5x', '1x', '1.25x', '1.5x', '2x'].map(speed => (
+              <TouchableOpacity
+                key={speed}
+                style={[
+                  styles.dropdownRow,
+                  selectedSpeed === speed && {backgroundColor: 'white'},
+                  {width: '100 %'},
+                ]}
+                onPress={() => handleSpeedSelection(speed)}>
+                <Text
+                  style={[
+                    styles.threeDotsDropdownText,
+                    selectedSpeed === speed && {color: 'black'},
+                  ]}>
+                  {speed}
+                </Text>
+              </TouchableOpacity>
+            ))}
             <TouchableOpacity
-              key={speed}
               style={[
                 styles.dropdownRow,
-                selectedSpeed === speed && {backgroundColor: 'white'},
-                {width: '100 %'},
+                {
+                  height: 40,
+                  borderColor: 'rgba(111,111,111,1)',
+                  borderTopWidth: 1,
+                  width: '100 %',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                },
               ]}
-              onPress={() => handleSpeedSelection(speed)}>
-              <Text
-                style={[
-                  styles.threeDotsDropdownText,
-                  selectedSpeed === speed && {color: 'black'},
-                ]}>
-                {speed}
-              </Text>
+              onPress={handleShareButton}>
+              <Share_Icon style={{marginTop: 13}} />
+              <Text style={styles.threeDotsDropdownText}>Share</Text>
             </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            style={[
-              styles.dropdownRow,
-              {
-                height: 40,
-                borderColor: 'rgba(111,111,111,1)',
-                borderTopWidth: 1,
-                width: '100 %',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-              },
-            ]}
-            onPress={handleShareButton}
-            >
-            <Share_Icon style={{marginTop: 13}} />
-            <Text style={styles.threeDotsDropdownText}>Share</Text>
-          </TouchableOpacity>
+          </BlurView>
         </View>
       )}
     </>
@@ -183,11 +196,10 @@ const styles = StyleSheet.create({
     display: 'flex',
     top: 55,
     right: 5,
-    backgroundColor: 'rgba(44,44,44,0.9)',
     width: 200,
     borderRadius: 4,
     paddingTop: 8,
-    zIndex:100
+    zIndex: 100,
   },
   threeDotsDropdownText: {
     fontSize: 13,
@@ -199,12 +211,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: 120,
     justifyContent: 'space-between',
-    alignItems:'center',
+    alignItems: 'center',
     paddingVertical: 5,
     paddingLeft: 16,
     height: 26,
   },
+  blurView: {
+    width: '100 %',
+    height: '100 %',
+    borderRadius: 7,
+    borderColor: 'rgba(0,0,0,0)',
+  },
 });
-
 
 export default Header;
