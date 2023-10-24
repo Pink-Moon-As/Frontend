@@ -59,6 +59,7 @@ export default function Mantra() {
   };
 
   const updateSelectedMatra = (id: string) => {
+    setIsLoading(true);
     setSelectedMantraId(id);
     setBackdropRef(mantraList[id].backdrop_ref);
     setBackdropSize(150);
@@ -96,9 +97,11 @@ export default function Mantra() {
       .getDownloadURL()
       .then(url => {
         setAudioUrl(url);
+        setIsLoading(false);
       })
       .catch(error => {
         console.error('Error getting Audio URL: ', error);
+        setIsLoading(false);
       });
   }, [audioRef]);
 
