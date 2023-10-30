@@ -5,71 +5,73 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import NavHolder from './pages/Holder/NavHolder';
+import Login from './pages/LoginAndSignup/Login';
+import Signup from './pages/LoginAndSignup/Signup';
+import OTPScreen from './pages/LoginAndSignup/OTPScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import firestore from '@react-native-firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-import {NavigationContainer} from '@react-navigation/native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import BottomNav from './components/BottomNav';
-import {createStackNavigator} from '@react-navigation/stack'
-
-
-const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const [userId, setUserId] = useState<string | null>('XNEz6Eq6peP65FRCCpyy');
+
+  const getDocumentIdFromLocalStorage = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem('userId');
+      setUserId(storedUserId)
+      console.log(userId,"Hello")
+      return storedUserId;
+    } catch (error) {
+      console.error('Error retrieving document ID:', error);
+      return null;
+    }
   };
 
-  return (
+  useEffect(() => {
+    // Load the userId from local storage
+    getDocumentIdFromLocalStorage();
+    if (userId == '') { return }
+    const collectionRef = firestore().collection('TblUsers');
+    const documentRef = collectionRef.doc(userId?.toString());
 
+    const unsubscribe = documentRef.onSnapshot((docSnapshot) => {
+      if (docSnapshot.exists) {
+        const data = docSnapshot.data();
+        if (data && data.isSignedIn !== undefined) {
+          setIsSignedIn(data.isSignedIn);
+        }
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+
+
+  }, []);
+
+
+
+  return (
     <NavigationContainer>
-      <StatusBar backgroundColor={'#000000'}/>
-      <Stack.Navigator>
-        <Stack.Screen name="Root" component={BottomNav} options={{headerShown:false}}/>
-      </Stack.Navigator>
+      {isSignedIn ? (
+        <NavHolder />
+      ) : (
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen name="Signup" component={Signup} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="OTPScreen" component={OTPScreen} />
+        </Stack.Navigator>
+      )}
     </NavigationContainer>
- 
-    
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
