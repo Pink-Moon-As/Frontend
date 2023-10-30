@@ -1,6 +1,7 @@
 import React from 'react';
 import {Text, StyleSheet, View, SafeAreaView} from 'react-native';
 import Header from './components/Header';
+import Calendar from './components/CalendarComponent';
 
 const Dashboard = () => {
   return (
@@ -8,7 +9,7 @@ const Dashboard = () => {
       <View style={styles.parent}>
         <Header />
         <View style={styles.contentContainer}>
-
+        <Calendar/>
         </View>
       </View>
       
