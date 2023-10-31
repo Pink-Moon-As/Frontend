@@ -156,8 +156,10 @@ function CalendarComponent() {
         key={selectedDate.toDateString()} 
         markingType={'custom'}
         markedDates={formattedDates}
+        disableMonthChange={true}
       />
       <Color_Indicator_SVG height={40} style={{ alignSelf: 'flex-end', marginRight: 20 }} />
+      
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"  // Change the mode to "date"
@@ -215,7 +217,8 @@ const styles = StyleSheet.create({
     color: '#181818',
     fontSize: 18,
     fontWeight: '400'
-  }
+  },
+
 });
 
 export default CalendarComponent;
