@@ -255,7 +255,7 @@ export default function Mantra() {
               // Render the SVG using the SvgUri component from react-native-svg
               <SvgUri width={backdropSize} height={backdropSize} uri={svgURL} />
             ) : (
-              <Text>Loading SVG...</Text>
+              <ActivityIndicator size="large" color="#E25E3E" />
             )}
           </View>
 

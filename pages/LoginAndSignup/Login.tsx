@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'rea
 import { NavigationContainer } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { sendSmsVerification } from '../../api/verify'
+import axios from 'axios';
+
 
 interface LoginScreenProps {
   navigation: NavigationProp<any>; // Use the correct type for your navigation stack
@@ -16,12 +18,26 @@ function LoginScreen({navigation}:LoginScreenProps){
     if(phoneNumber.length<10){
       return;
     }
-    
-    // sendSmsVerification(phoneNumber).then((sent) => {
-    //   console.log("Sent!");
-       navigation.navigate('OTPScreen',{phoneNumber:phoneNumber})
-    // });
-    console.log('Sending OTP to phone number:', phoneNumber);
+    const sendOtpUrl ="http://localhost:3000/sendOtp"
+    const login_flag = true;
+    const data = {
+      phone_num:phoneNumber,
+      login_flag:login_flag
+    }
+    axios.post(sendOtpUrl,data)
+    .then(function (response) {
+      if(response.data.success){
+        console.log(response)
+        navigation.navigate('OTPScreen',{phoneNumber:phoneNumber,login_flag:true})
+      }
+      else{
+        console.log(response, "Some error occured in sending the otp")
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+
   };
 
   return (
